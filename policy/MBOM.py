@@ -217,7 +217,7 @@ class MBOM(PPO):
                 actions_om_probs.append(actions_om_probs_k)
             actions_om_probs = torch.cat(actions_om_probs, dim=0)
             target = oppo_action.squeeze().repeat(self.conf["num_om_layers"])
-            error_list = torch.nn.functional.cross_entropy(actions_om_probs, target, reduce=False)
+            error_list = torch.nn.functional.cross_entropy(actions_om_probs, target, reduction='none')
 
         ratio, _, hidden = self.mixer(error_list.view(1, -1), self.mixer_hidden)
         self.mixer_hidden = hidden
@@ -238,13 +238,13 @@ class MBOM(PPO):
             'agent_idx': self.agent_idx,
             'actor_rnn': self.actor_rnn,
         }
-        torch.save(obj, filepath, _use_new_zipfile_serialization=False)
+        torch.save(obj, filepath)
         self.logger.log("model saved in {}".format(filepath))
 
     @staticmethod
     def load_model(filepath, args, logger, device, **kwargs):
         assert "env_model" in kwargs.keys(), "must input env_model"
-        checkpoint = torch.load(filepath, map_location='cpu')
+        checkpoint = torch.load(filepath, map_location='cpu', weights_only=False)
         conf = checkpoint["conf"]
         name = checkpoint["name"].replace("MBOM_", "")
         agent_idx = checkpoint["agent_idx"]

@@ -70,7 +70,7 @@ def collect_trajectory(agents, env, args, global_step, is_prophetic=False, greed
             global_step += 1
             actions = np.array([0, 0], dtype=int)
             for agent_idx, agent in enumerate(agents):
-                if type(agent).__name__ == "MBAM":
+                if type(agent).__name__ == "MBOM":
                     action_info = agent.choose_action(state[agent_idx], hidden_state=hidden_state[agent_idx], oppo_hidden_prob=oppo_hidden_prob[1-agent_idx] if is_prophetic == True else None, greedy=greedy)
                 elif type(agent).__name__ == "PPO":
                     action_info = agent.choose_action(state[agent_idx], hidden_state=hidden_state[agent_idx], oppo_hidden_prob=None, greedy=greedy)
@@ -125,7 +125,7 @@ def collect_trajectory_reversed(agents, env, args, global_step, is_prophetic=Fal
             global_step += 1
             actions = np.array([0, 0], dtype=int)
             for agent_idx, agent in list(enumerate(agents))[::-1]:
-                if type(agent).__name__ == "MBAM":
+                if type(agent).__name__ == "MBOM":
                     action_info = agent.choose_action(state[agent_idx], hidden_state=hidden_state[agent_idx], oppo_hidden_prob=oppo_hidden_prob[1-agent_idx] if is_prophetic == True else None)
                 elif type(agent).__name__ == "PPO":
                     action_info = agent.choose_action(state[agent_idx], hidden_state=hidden_state[agent_idx], oppo_hidden_prob=None)

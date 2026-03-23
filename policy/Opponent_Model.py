@@ -73,7 +73,7 @@ class OM_Buffer(object):
         self.device = device
 
         self.obs = torch.zeros((conf["opponent_model_memory_size"], conf["n_state"]), dtype=torch.float32, device=device)
-        self.act = torch.zeros((conf["opponent_model_memory_size"], 1), dtype=int, device=device)
+        self.act = torch.zeros((conf["opponent_model_memory_size"], 1), dtype=torch.long, device=device)
         self.next_idx, self.size, self.max_size = 0, 0, conf["opponent_model_memory_size"]
 
     def store_memory(self, state, action):

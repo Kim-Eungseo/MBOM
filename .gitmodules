@@ -1,0 +1,6 @@
+[submodule "posggym"]
+	path = posggym
+	url = https://github.com/Kim-Eungseo/posggym.git
+[submodule "posggym-baselines"]
+	path = posggym-baselines
+	url = https://github.com/Kim-Eungseo/posggym-baselines.git

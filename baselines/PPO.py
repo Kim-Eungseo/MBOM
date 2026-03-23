@@ -168,12 +168,12 @@ class PPO(Base_ActorCritic):
             'name': self.name,
             'actor_rnn': self.actor_rnn,
         }
-        torch.save(obj, filepath, _use_new_zipfile_serialization=False)
+        torch.save(obj, filepath)
         self.logger.log("model saved in {}".format(filepath))
 
     @staticmethod
     def load_model(filepath, args, logger, device, **kwargs):
-        checkpoint = torch.load(filepath, map_location='cpu')
+        checkpoint = torch.load(filepath, map_location='cpu', weights_only=False)
         conf = checkpoint["conf"]
         name = checkpoint["name"].replace("PPO_", "")
         actor_rnn = checkpoint["actor_rnn"]
@@ -202,7 +202,7 @@ class PPO_Buffer(object):
         self.lam = conf["lambda"]
 
         self.state = torch.zeros((conf["buffer_memory_size"], conf["n_state"]), dtype=torch.float32)
-        self.action = torch.zeros((conf["buffer_memory_size"], 1), dtype=int)
+        self.action = torch.zeros((conf["buffer_memory_size"], 1), dtype=torch.long)
         self.reward = torch.zeros((conf["buffer_memory_size"], 1), dtype=torch.float32)
         self.reward_to_go = torch.zeros((conf["buffer_memory_size"], 1), dtype=torch.float32)
         self.advantage = torch.zeros((conf["buffer_memory_size"], 1), dtype=torch.float32)

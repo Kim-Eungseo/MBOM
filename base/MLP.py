@@ -24,7 +24,7 @@ class MLP(nn.Module):
     def forward(self, x):
         assert type(x) is torch.Tensor, "net forward input type error"
         for i, layer in enumerate(self.layers):
-            x = nn.functional.tanh(layer(x))
+            x = torch.tanh(layer(x))
 
         if self.output_type == "gauss":
             mu = nn.functional.tanh(self.mu(x))
@@ -32,7 +32,7 @@ class MLP(nn.Module):
             return mu, sigma
         elif self.output_type == "prob":
             hidden_prob = x.detach()
-            x = nn.functional.softmax(self.out(x))
+            x = nn.functional.softmax(self.out(x), dim=-1)
             #return x, hidden_prob   #hidden prob
             return x, x.detach()   #trub prob
         else:
