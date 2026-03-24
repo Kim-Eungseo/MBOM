@@ -42,3 +42,15 @@ class Logger():
         print(s)
         self.log_file.write(s + "\n")
         self.log_file.flush()
+
+    def __getstate__(self):
+        """Allow pickling/deepcopy by excluding file handles."""
+        state = self.__dict__.copy()
+        state['log_file'] = None
+        state['writer'] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.log_file = open(os.path.join(self.root_dir, "log.txt"), 'a')
+        self.writer = SummaryWriter(self.log_dir)

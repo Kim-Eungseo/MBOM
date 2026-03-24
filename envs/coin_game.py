@@ -113,3 +113,13 @@ class CoinGame:
                     break
             if not conflict:
                 return pos
+
+
+class CoinGameEnvModel:
+    """Learned env model for Coin Game. Input: state(36)+a0(4)+a1(4)=44, Output: state(36)+r0+r1+done=39."""
+    def __init__(self, device):
+        from envs.env_model_base import BaseEnvModel
+        self._base = BaseEnvModel(device, n_state=36, n_action=4, n_opponent_action=4)
+        self.reset = self._base.reset
+        self.step = self._base.step
+        self.train_step = self._base.train_step

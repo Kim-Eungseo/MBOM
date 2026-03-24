@@ -39,7 +39,9 @@ class Base_ActorCritic(object):
         raise NotImplementedError
 
     def change_device(self, device):
-        raise NotImplementedError
+        self.device = device
+        self.a_net = self.a_net.to(device)
+        self.v_net = self.v_net.to(device)
 
     def change_conf(self, conf):
         self.conf = conf

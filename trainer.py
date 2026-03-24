@@ -46,16 +46,16 @@ def worker(args, root_dir, rank, channel_out, channel_in, env, env_model, confs)
     #env_model = football_env_model(args.device)
     logger = Logger(root_dir, "worker", rank)
     ppo = PPO(args, confs[0], name="football_rank{}".format(rank), logger=logger, actor_rnn=args.actor_rnn, device=args.device)
-    MBOM = MBOM(args=args, conf=confs[1], name="football", logger=logger, agent_idx=1, actor_rnn=args.actor_rnn, env_model=env_model, device=args.device)
-    agents = [ppo, MBOM]
+    mbom_agent = MBOM(args=args, conf=confs[1], name="football", logger=logger, agent_idx=1, actor_rnn=args.actor_rnn, env_model=env_model, device=args.device)
+    agents = [ppo, mbom_agent]
     buffers = [PPO_Buffer(args=args, conf=agent.conf, name=agent.name, actor_rnn=args.actor_rnn, device=args.device) for agent in agents]
     logger.log_param(args, [agent.conf for agent in agents], rank=rank)
     global_step = 0
     for epoch in range(1, args.max_epoch + 1):
         logger.log("rank:{}, epoch:{} start!".format(rank, epoch))
         param = channel_in.get()
-        MBOM.a_net.load_state_dict(param["a_net"])
-        MBOM.v_net.load_state_dict(param["v_net"])
+        mbom_agent.a_net.load_state_dict(param["a_net"])
+        mbom_agent.v_net.load_state_dict(param["v_net"])
         memory, scores, global_step = collect_trajectory(agents, env, args, global_step, is_prophetic=True)
         for i in range(2):
             logger.log_performance(tag=agents[i].name, iteration=epoch, Score=scores[i])

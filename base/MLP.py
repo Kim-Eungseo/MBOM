@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 
 class MLP(nn.Module):
-    def __init__(self, input, output, hidden_layers_features, output_type=None):
+    def __init__(self, input, output, hidden_layers_features, output_type=None, activation="relu"):
         super(MLP, self).__init__()
         self.input = input
         self.output = output
         self.hidden_layers_features = hidden_layers_features
         self.output_type = output_type
+        self.activation = activation
 
         self.layers = []
         self.layers.append(nn.Linear(self.input, self.hidden_layers_features[0]))
@@ -21,20 +22,26 @@ class MLP(nn.Module):
         else:
             self.out = nn.Linear(self.hidden_layers_features[-1], self.output)
 
+    def _activate(self, x):
+        if self.activation == "relu":
+            return torch.relu(x)
+        elif self.activation == "tanh":
+            return torch.tanh(x)
+        return torch.relu(x)
+
     def forward(self, x):
         assert type(x) is torch.Tensor, "net forward input type error"
         for i, layer in enumerate(self.layers):
-            x = torch.tanh(layer(x))
+            x = self._activate(layer(x))
 
         if self.output_type == "gauss":
-            mu = nn.functional.tanh(self.mu(x))
+            mu = torch.tanh(self.mu(x))
             sigma = nn.functional.softplus(self.sigma(x))
             return mu, sigma
         elif self.output_type == "prob":
             hidden_prob = x.detach()
             x = nn.functional.softmax(self.out(x), dim=-1)
-            #return x, hidden_prob   #hidden prob
-            return x, x.detach()   #trub prob
+            return x, x.detach()
         else:
             x = self.out(x)
             return x

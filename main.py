@@ -89,7 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--rnn_mixer", type=bool, default=False)
 
     parser.add_argument("--actor_rnn", type=bool, default=False)
-    parser.add_argument("--true_prob", type=bool, default=False)
+    parser.add_argument("--true_prob", type=bool, default=True)
     parser.add_argument("--prophetic_onehot", type=bool, default=False)
     parser.add_argument("--policy_training", type=bool, default=False)
 

@@ -18,6 +18,8 @@ class PPO(Base_ActorCritic):
                                   name="PPO_" + name,
                                   logger=logger)
         self.device = device
+        if device is not None:
+            self.change_device(device)
 
     def init_hidden_state(self, n_batch):
         if self.actor_rnn:
@@ -40,7 +42,9 @@ class PPO(Base_ActorCritic):
             v_state = v_state.to(self.device)
         if oppo_hidden_prob is not None:
             if type(oppo_hidden_prob) is np.ndarray:
-                oppo_hidden_prob = torch.Tensor(oppo_hidden_prob).to(device=self.device)
+                oppo_hidden_prob = torch.Tensor(oppo_hidden_prob)
+            if self.device:
+                oppo_hidden_prob = oppo_hidden_prob.to(self.device)
             oppo_hidden_prob = oppo_hidden_prob.view((-1, self.conf["n_opponent_action"] if self.args.true_prob else
             self.conf["opponent_model_hidden_layers"][-1]))
             if self.args.prophetic_onehot:

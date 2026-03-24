@@ -20,7 +20,7 @@ class Opponent_Model(object):
         self.model.to(device)
 
     def get_parameter(self, *args):
-        return [p.clone() for p in self.model.parameters()]
+        return [p.clone().detach() for p in self.model.parameters()]
 
     def set_parameter(self, new_parameter):
         if isinstance(new_parameter, types.GeneratorType):

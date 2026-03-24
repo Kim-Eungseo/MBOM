@@ -99,15 +99,18 @@ def collect_trajectory(agents, env, args, global_step, is_prophetic=False, greed
                         agent.observe_oppo_action(state=state[agent_idx], oppo_action=actions[1-agent_idx],
                                                   iteration=global_step, no_log=False)
             state = state_
-            if done:
+            step_in_episode = len(temp_memory[0].reward)
+            if done or step_in_episode >= args.eps_max_step:
                 for i in range(len(agents)):
                     temp_memory[i].store_final_state(state_[i], info)
                     memories[i].append(temp_memory[i])
                     scores[i].append(temp_memory[i].get_score())
+                coin_sum = info.get("coin_sum", 1)
+                same_pick_sum = info.get("same_pick_sum", 0)
                 agents[1].logger.log_performance(tag=agents[1].name + "/steps", iteration=global_step,
-                                                 Same_pick_sum=info["same_pick_sum"],
-                                                 Coin_sum=info["coin_sum"],
-                                                 Pick_ratio=info["same_pick_sum"]/info["coin_sum"])
+                                                 Same_pick_sum=same_pick_sum,
+                                                 Coin_sum=coin_sum,
+                                                 Pick_ratio=same_pick_sum/max(1, coin_sum))
                 break
     scores = [sum(scores[i])/len(scores[i]) for i in range(len(agents))]
     return memories, scores, global_step
@@ -152,7 +155,8 @@ def collect_trajectory_reversed(agents, env, args, global_step, is_prophetic=Fal
                         agent.observe_oppo_action(state=state[agent_idx], oppo_action=actions[1-agent_idx],
                                                   iteration=global_step, no_log=False)
             state = state_
-            if done:
+            step_in_episode = len(temp_memory[0].reward)
+            if done or step_in_episode >= args.eps_max_step:
                 for i in range(len(agents)):
                     temp_memory[i].store_final_state(state_[i], info)
                     memories[i].append(temp_memory[i])

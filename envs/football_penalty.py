@@ -184,10 +184,24 @@ class FootballEnvModel:
           - rewards: list of 2 tensors [batch, 1]
           - done: [batch, 1]
         """
+        if not isinstance(state, torch.Tensor):
+            state = torch.tensor(state, dtype=torch.float32, device=self.device)
+        if state.dim() == 1:
+            state = state.unsqueeze(0)
+        a0 = actions[0] if isinstance(actions[0], torch.Tensor) else torch.tensor(actions[0], device=self.device)
+        a1 = actions[1] if isinstance(actions[1], torch.Tensor) else torch.tensor(actions[1], device=self.device)
+        if a0.dim() == 0:
+            a0 = a0.unsqueeze(0).unsqueeze(1)
+        elif a0.dim() == 1:
+            a0 = a0.unsqueeze(1)
+        if a1.dim() == 0:
+            a1 = a1.unsqueeze(0).unsqueeze(1)
+        elif a1.dim() == 1:
+            a1 = a1.unsqueeze(1)
         a0_onehot = torch.zeros(state.shape[0], self.n_action, device=self.device)
         a1_onehot = torch.zeros(state.shape[0], self.n_action, device=self.device)
-        a0_onehot.scatter_(1, actions[0].long(), 1)
-        a1_onehot.scatter_(1, actions[1].long(), 1)
+        a0_onehot.scatter_(1, a0.long(), 1)
+        a1_onehot.scatter_(1, a1.long(), 1)
 
         x = torch.cat([state, a0_onehot, a1_onehot], dim=1)
         out = self.model(x)
@@ -201,10 +215,14 @@ class FootballEnvModel:
 
     def train_step(self, state, actions, next_state_target, reward_targets, done_target):
         """Train the env model on a batch of transitions."""
+        if not isinstance(state, torch.Tensor):
+            state = torch.tensor(state, dtype=torch.float32, device=self.device)
+        a0 = actions[0] if isinstance(actions[0], torch.Tensor) else torch.tensor(actions[0], device=self.device)
+        a1 = actions[1] if isinstance(actions[1], torch.Tensor) else torch.tensor(actions[1], device=self.device)
         a0_onehot = torch.zeros(state.shape[0], self.n_action, device=self.device)
         a1_onehot = torch.zeros(state.shape[0], self.n_action, device=self.device)
-        a0_onehot.scatter_(1, actions[0].long(), 1)
-        a1_onehot.scatter_(1, actions[1].long(), 1)
+        a0_onehot.scatter_(1, a0.long(), 1)
+        a1_onehot.scatter_(1, a1.long(), 1)
 
         x = torch.cat([state, a0_onehot, a1_onehot], dim=1)
         out = self.model(x)

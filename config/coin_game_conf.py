@@ -1,3 +1,4 @@
+"""Coin Game config — per MBOM paper Table 3."""
 coin_game_conf = {
     "conf_id": "coin_game_conf",
     "n_state": 36,  # 4 channels * 3 * 3
@@ -13,25 +14,25 @@ coin_game_conf = {
     "a_hidden_layers": [64, 32],
     "v_learning_rate": 0.001,
     "a_learning_rate": 0.001,
-    "gamma": 0.99,
-    "lambda": 0.99,
+    "gamma": 0,       # paper Table 3: 0 for Coin Game
+    "lambda": 0,       # paper Table 3: 0 for Coin Game
     "epsilon": 0.115,
     "entcoeff": 0.0015,
     "a_update_times": 10,
     "v_update_times": 10,
-    "buffer_memory_size": 1500,  # 150 steps * 10 eps
+    "buffer_memory_size": 1500,
 
-    "num_om_layers": 3,
+    "num_om_layers": 2,                       # paper: M=2
     "opponent_model_hidden_layers": [64, 32],
     "opponent_model_memory_size": 1000,
     "opponent_model_learning_rate": 0.001,
     "opponent_model_batch_size": 64,
-    "opponent_model_learning_times": 1,
+    "opponent_model_learning_times": 10,       # paper: 10
 
-    "imagine_model_learning_rate": 0.001,
-    "imagine_model_learning_times": 5,
-    "roll_out_length": 3,
+    "imagine_model_learning_rate": 0.005,      # paper: IOP lr=0.005
+    "imagine_model_learning_times": 3,         # paper: IOP update times=3
+    "roll_out_length": 1,                      # paper: k=1
     "short_term_decay": 0.9,
     "short_term_horizon": 10,
-    "mix_factor": 0.4047,  # 1.1/e
+    "mix_factor": 1.0,                         # paper: s-softmax factor=1
 }

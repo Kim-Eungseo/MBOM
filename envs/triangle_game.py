@@ -107,3 +107,13 @@ class TriangleGame:
             ]).astype(np.float32)
             obs_list.append(obs)
         return obs_list
+
+
+class TriangleGameEnvModel:
+    """Learned env model for Triangle Game. Input: state(14)+a0(5)+a1(5)=24, Output: state(14)+r0+r1+done=17."""
+    def __init__(self, device):
+        from envs.env_model_base import BaseEnvModel
+        self._base = BaseEnvModel(device, n_state=14, n_action=5, n_opponent_action=5)
+        self.reset = self._base.reset
+        self.step = self._base.step
+        self.train_step = self._base.train_step

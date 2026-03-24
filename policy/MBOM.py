@@ -21,11 +21,11 @@ class MBOM(PPO):
         self.env_model = env_model
         self.oppo_model = Opponent_Model(args, conf, self.name, device)
         self.om_buffer = OM_Buffer(args, conf, device)
-        self.om_phis = np.array([self.oppo_model.get_parameter()] * conf["num_om_layers"])
+        self.om_phis = [self.oppo_model.get_parameter() for _ in range(conf["num_om_layers"])]
         if rnn_mixer:
             self.mix_ratio = torch.Tensor([1.0 / conf["num_om_layers"]] * conf["num_om_layers"]).to(device)
         else:
-            self.mix_ratio = np.array([1.0 / conf["num_om_layers"]] * conf["num_om_layers"])
+            self.mix_ratio = [1.0 / conf["num_om_layers"]] * conf["num_om_layers"]
         self.device = device
         self.rnn_mixer = rnn_mixer
         if device is not None:
@@ -33,12 +33,12 @@ class MBOM(PPO):
 
     def change_om_layers(self, num, rnn_mixer=False):
         self.conf["num_om_layers"] = num
-        self.om_phis = np.array([self.oppo_model.get_parameter()] * self.conf["num_om_layers"])
+        self.om_phis = [self.oppo_model.get_parameter() for _ in range(self.conf["num_om_layers"])]
         self.rnn_mixer = rnn_mixer
         if self.rnn_mixer:
             self.mix_ratio = torch.Tensor([1.0 / self.conf["num_om_layers"]] * self.conf["num_om_layers"]).to(self.device)
         else:
-            self.mix_ratio = np.array([1.0 / self.conf["num_om_layers"]] * self.conf["num_om_layers"])
+            self.mix_ratio = [1.0 / self.conf["num_om_layers"]] * self.conf["num_om_layers"]
 
     def change_device(self, device):
         super(MBOM, self).change_device(device)
@@ -103,7 +103,7 @@ class MBOM(PPO):
         done_record = None
         cur_batch = 1
         self.env_model.reset()
-        oppo_action = torch.LongTensor([i for i in range(self.conf["n_opponent_action"])]).view(-1, 1)
+        oppo_action = torch.LongTensor([i for i in range(self.conf["n_opponent_action"])]).view(-1, 1).to(self.device)
         for i in range(self.conf["roll_out_length"]):
             if i != 0:
                 oppo_action = oppo_action.repeat(self.conf["n_opponent_action"], 1)  # [next_batch, 1]
@@ -124,11 +124,13 @@ class MBOM(PPO):
             actions[self.agent_idx] = action
             actions[1 - self.agent_idx] = oppo_action
             state_, reward, done = self.env_model.step(state, actions)
+            # Paper Eq.4: track OPPONENT reward to find opponent's best response
+            oppo_idx = 1 - self.agent_idx
             if rew_record is None:
-                rew_record = reward[self.agent_idx].view(-1, 1).to(self.device)
+                rew_record = reward[oppo_idx].view(-1, 1).to(self.device)
                 done_record = done.view(-1, 1).to(self.device)
             else:
-                rew_record = torch.cat([rew_record, reward[self.agent_idx]], dim=1)
+                rew_record = torch.cat([rew_record, reward[oppo_idx]], dim=1)
                 done_record = torch.cat([done_record, done], dim=1)
             if i != self.conf["roll_out_length"] - 1:
                 rew_record = rew_record.repeat(self.conf["n_opponent_action"], 1)
@@ -137,14 +139,15 @@ class MBOM(PPO):
         with torch.no_grad():
             v = self.v_net(state_)
         left_zero = torch.zeros((done_record.shape[0], 1), device=self.device)
-        temp_1 = torch.cat([left_zero.bool(), done_record], dim=1)
+        temp_1 = torch.cat([left_zero.bool(), done_record.bool()], dim=1)
         temp_11 = rew_record * (~temp_1[:, :-1])
-        reward_record = torch.cat([temp_11.float(), v * (~done_record[:, -1:])], dim=1)
+        reward_record = torch.cat([temp_11.float(), v * (~done_record[:, -1:].bool())], dim=1)
 
         if not hasattr(self, "gamma_list"):
             self.gamma_list = torch.tensor([pow(self.conf["gamma"], i) for i in range(self.conf["roll_out_length"] + 1)], device=self.device)
         discount_r = torch.sum(reward_record * self.gamma_list, axis=1)
-        best_response = (torch.argmin(discount_r, dim=0) / (self.conf["n_opponent_action"] ** (self.conf["roll_out_length"] - 1))).view(1, 1).long()
+        # Paper Eq.4: argmax of opponent's discounted reward
+        best_response = (torch.argmax(discount_r, dim=0) / (self.conf["n_opponent_action"] ** (self.conf["roll_out_length"] - 1))).view(1, 1).long()
         return best_response
 
     def observe_oppo_action(self, state, oppo_action, iteration, no_log=True):
@@ -249,19 +252,19 @@ class MBOM(PPO):
         name = checkpoint["name"].replace("MBOM_", "")
         agent_idx = checkpoint["agent_idx"]
         actor_rnn = checkpoint["actor_rnn"]
-        MBOM = MBOM(args, conf, name, logger, agent_idx, actor_rnn, kwargs["env_model"], device, rnn_mixer=args.rnn_mixer)
+        model = MBOM(args, conf, name, logger, agent_idx, actor_rnn, kwargs["env_model"], device, rnn_mixer=args.rnn_mixer)
 
-        MBOM.v_net.load_state_dict(checkpoint['v_net_state_dict'])
-        MBOM.a_net.load_state_dict(checkpoint['a_net_state_dict'])
-        MBOM.v_optimizer.load_state_dict(checkpoint['v_optimizer_state_dict'])
-        MBOM.a_optimizer.load_state_dict(checkpoint['a_optimizer_state_dict'])
+        model.v_net.load_state_dict(checkpoint['v_net_state_dict'])
+        model.a_net.load_state_dict(checkpoint['a_net_state_dict'])
+        model.v_optimizer.load_state_dict(checkpoint['v_optimizer_state_dict'])
+        model.a_optimizer.load_state_dict(checkpoint['a_optimizer_state_dict'])
 
         if device:
-            MBOM.v_net = MBOM.v_net.to(device)
-            MBOM.a_net = MBOM.a_net.to(device)
+            model.v_net = model.v_net.to(device)
+            model.a_net = model.a_net.to(device)
         if logger is not None:
             logger.log("model successful load, {}".format(filepath))
-        return MBOM
+        return model
 def lambda_softmax(y, dim, factor):
     import math
     with torch.no_grad():

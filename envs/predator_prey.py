@@ -148,3 +148,13 @@ class PredatorPrey:
         ]).astype(np.float32)
 
         return [prey_obs, pred_obs]
+
+
+class PredatorPreyEnvModel:
+    """Learned env model for Predator-Prey. Input: state(16)+a0(5)+a1(5)=26, Output: state(16)+r0+r1+done=19."""
+    def __init__(self, device):
+        from envs.env_model_base import BaseEnvModel
+        self._base = BaseEnvModel(device, n_state=16, n_action=5, n_opponent_action=5)
+        self.reset = self._base.reset
+        self.step = self._base.step
+        self.train_step = self._base.train_step
