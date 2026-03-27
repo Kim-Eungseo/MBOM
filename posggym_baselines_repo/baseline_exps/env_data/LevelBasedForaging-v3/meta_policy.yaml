@@ -1,0 +1,188 @@
+P0:
+  greedy:
+    LevelBasedForaging-v3/H1-v0:
+      LevelBasedForaging-v3/H1-v0: 0.0
+      LevelBasedForaging-v3/H2-v0: 0.0
+      LevelBasedForaging-v3/H3-v0: 1.0
+      LevelBasedForaging-v3/H4-v0: 0.0
+      LevelBasedForaging-v3/H5-v0: 0.0
+    LevelBasedForaging-v3/H2-v0:
+      LevelBasedForaging-v3/H1-v0: 0.0
+      LevelBasedForaging-v3/H2-v0: 0.0
+      LevelBasedForaging-v3/H3-v0: 1.0
+      LevelBasedForaging-v3/H4-v0: 0.0
+      LevelBasedForaging-v3/H5-v0: 0.0
+    LevelBasedForaging-v3/H3-v0:
+      LevelBasedForaging-v3/H1-v0: 0.0
+      LevelBasedForaging-v3/H2-v0: 0.0
+      LevelBasedForaging-v3/H3-v0: 0.0
+      LevelBasedForaging-v3/H4-v0: 0.0
+      LevelBasedForaging-v3/H5-v0: 1.0
+    LevelBasedForaging-v3/H4-v0:
+      LevelBasedForaging-v3/H1-v0: 0.0
+      LevelBasedForaging-v3/H2-v0: 0.0
+      LevelBasedForaging-v3/H3-v0: 1.0
+      LevelBasedForaging-v3/H4-v0: 0.0
+      LevelBasedForaging-v3/H5-v0: 0.0
+    LevelBasedForaging-v3/H5-v0:
+      LevelBasedForaging-v3/H1-v0: 0.0
+      LevelBasedForaging-v3/H2-v0: 0.0
+      LevelBasedForaging-v3/H3-v0: 0.0
+      LevelBasedForaging-v3/H4-v0: 0.0
+      LevelBasedForaging-v3/H5-v0: 1.0
+  softmax:
+    LevelBasedForaging-v3/H1-v0:
+      LevelBasedForaging-v3/H1-v0: 0.18198303371867197
+      LevelBasedForaging-v3/H2-v0: 0.11584319080149073
+      LevelBasedForaging-v3/H3-v0: 0.29622969816887257
+      LevelBasedForaging-v3/H4-v0: 0.11170716215272732
+      LevelBasedForaging-v3/H5-v0: 0.2942369151582374
+    LevelBasedForaging-v3/H2-v0:
+      LevelBasedForaging-v3/H1-v0: 0.18800182619948655
+      LevelBasedForaging-v3/H2-v0: 0.11566762960891881
+      LevelBasedForaging-v3/H3-v0: 0.2913421637765384
+      LevelBasedForaging-v3/H4-v0: 0.11715490093614983
+      LevelBasedForaging-v3/H5-v0: 0.2878334794789065
+    LevelBasedForaging-v3/H3-v0:
+      LevelBasedForaging-v3/H1-v0: 0.18960548717522585
+      LevelBasedForaging-v3/H2-v0: 0.11893434036001788
+      LevelBasedForaging-v3/H3-v0: 0.2852916733496144
+      LevelBasedForaging-v3/H4-v0: 0.1147267199599935
+      LevelBasedForaging-v3/H5-v0: 0.29144177915514835
+    LevelBasedForaging-v3/H4-v0:
+      LevelBasedForaging-v3/H1-v0: 0.1817505649999039
+      LevelBasedForaging-v3/H2-v0: 0.11926652010629338
+      LevelBasedForaging-v3/H3-v0: 0.30270325467893533
+      LevelBasedForaging-v3/H4-v0: 0.11626278059839398
+      LevelBasedForaging-v3/H5-v0: 0.2800168796164733
+    LevelBasedForaging-v3/H5-v0:
+      LevelBasedForaging-v3/H1-v0: 0.18296792642080714
+      LevelBasedForaging-v3/H2-v0: 0.11783251802033422
+      LevelBasedForaging-v3/H3-v0: 0.27435470253400757
+      LevelBasedForaging-v3/H4-v0: 0.12233583749730749
+      LevelBasedForaging-v3/H5-v0: 0.30250901552754356
+  uniform:
+    LevelBasedForaging-v3/H1-v0:
+      LevelBasedForaging-v3/H1-v0: 0.2
+      LevelBasedForaging-v3/H2-v0: 0.2
+      LevelBasedForaging-v3/H3-v0: 0.2
+      LevelBasedForaging-v3/H4-v0: 0.2
+      LevelBasedForaging-v3/H5-v0: 0.2
+    LevelBasedForaging-v3/H2-v0:
+      LevelBasedForaging-v3/H1-v0: 0.2
+      LevelBasedForaging-v3/H2-v0: 0.2
+      LevelBasedForaging-v3/H3-v0: 0.2
+      LevelBasedForaging-v3/H4-v0: 0.2
+      LevelBasedForaging-v3/H5-v0: 0.2
+    LevelBasedForaging-v3/H3-v0:
+      LevelBasedForaging-v3/H1-v0: 0.2
+      LevelBasedForaging-v3/H2-v0: 0.2
+      LevelBasedForaging-v3/H3-v0: 0.2
+      LevelBasedForaging-v3/H4-v0: 0.2
+      LevelBasedForaging-v3/H5-v0: 0.2
+    LevelBasedForaging-v3/H4-v0:
+      LevelBasedForaging-v3/H1-v0: 0.2
+      LevelBasedForaging-v3/H2-v0: 0.2
+      LevelBasedForaging-v3/H3-v0: 0.2
+      LevelBasedForaging-v3/H4-v0: 0.2
+      LevelBasedForaging-v3/H5-v0: 0.2
+    LevelBasedForaging-v3/H5-v0:
+      LevelBasedForaging-v3/H1-v0: 0.2
+      LevelBasedForaging-v3/H2-v0: 0.2
+      LevelBasedForaging-v3/H3-v0: 0.2
+      LevelBasedForaging-v3/H4-v0: 0.2
+      LevelBasedForaging-v3/H5-v0: 0.2
+P1:
+  greedy:
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 1.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.0
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 1.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.0
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 1.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.0
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 1.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.0
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 1.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.0
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.0
+  softmax:
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.2562049868366355
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.23897725937912304
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.15612478309231972
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.1554421862756434
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.19325078441627835
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.18403291940990849
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.32316239397365903
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.26880217034655324
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.11498977491702327
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.10901274135285613
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.1860166552021397
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.22271888906846082
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.31040844410409674
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.1320230438893519
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.1488329677359508
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.19813281348435868
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.28476306426398057
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.2277568022021603
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.14472771555143432
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.1446196044980661
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.19786782466860328
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.2698949646874527
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.29746500740991355
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.1190486704677251
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.11572353276630515
+  uniform:
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.2
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.2
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.2
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.2
+    LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0:
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL1-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL2-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL3-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL4-v0: 0.2
+      LevelBasedForaging-v3/num_agents=2-size=10-static_layout=False/RL5-v0: 0.2
