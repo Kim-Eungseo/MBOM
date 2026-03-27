@@ -1,0 +1,107 @@
+Phase 1: Generating opponent pool...
+  Generated 200 train, 30 test opponents
+Phase 2: Pre-training MBOM + env_model...
+  Pretrain 20/200, tbuf=20000, score=3.70
+  Pretrain 40/200, tbuf=40000, score=-6.90
+  Pretrain 60/200, tbuf=50000, score=-25.95
+  Pretrain 80/200, tbuf=50000, score=-4.45
+  Pretrain 100/200, tbuf=50000, score=10.20
+  Pretrain 120/200, tbuf=50000, score=-42.95
+  Pretrain 140/200, tbuf=50000, score=25.90
+  Pretrain 160/200, tbuf=50000, score=0.80
+  Pretrain 180/200, tbuf=50000, score=-30.70
+  Pretrain 200/200, tbuf=50000, score=19.60
+  Env model loss: 0.053485
+Phase 3: Testing...
+  --- fixed ---
+    opp 0: 13.240
+    opp 1: 10.035
+    opp 2: 7.515
+    opp 3: 23.040
+    opp 4: 20.045
+    opp 5: 13.965
+    opp 6: -21.805
+    opp 7: -26.460
+    opp 8: -2.710
+    opp 9: 30.395
+    opp 10: 32.725
+    opp 11: 36.655
+    opp 12: 21.580
+    opp 13: 8.420
+    opp 14: 22.775
+    opp 15: -45.800
+    opp 16: -49.035
+    opp 17: -56.545
+    opp 18: 5.080
+    opp 19: 9.150
+    opp 20: 14.365
+    opp 21: -5.975
+    opp 22: -3.010
+    opp 23: -0.060
+    opp 24: -26.855
+    opp 25: -34.145
+    opp 26: -35.165
+    opp 27: 16.950
+    opp 28: 0.900
+    opp 29: 5.890
+  fixed mean: -0.495
+  --- naive ---
+    opp 0: -8.835
+    opp 1: 1.335
+    opp 2: -6.165
+    opp 3: 16.915
+    opp 4: 5.510
+    opp 5: -5.160
+    opp 6: -17.990
+    opp 7: -16.750
+    opp 8: -19.105
+    opp 9: 28.300
+    opp 10: 30.605
+    opp 11: 36.335
+    opp 12: 15.245
+    opp 13: 9.785
+    opp 14: 16.755
+    opp 15: -51.880
+    opp 16: -56.930
+    opp 17: -57.195
+    opp 18: -4.450
+    opp 19: -2.800
+    opp 20: 14.545
+    opp 21: -9.905
+    opp 22: -16.770
+    opp 23: -11.000
+    opp 24: -45.865
+    opp 25: -48.235
+    opp 26: -55.090
+    opp 27: 5.300
+    opp 28: 1.580
+    opp 29: -6.645
+  naive mean: -8.619
+  --- reasoning ---
+    opp 0: 3.295
+    opp 1: -0.160
+    opp 2: -1.120
+    opp 3: -10.130
+    opp 4: 4.265
+    opp 5: 1.310
+    opp 6: -11.430
+    opp 7: -21.310
+    opp 8: -26.940
+    opp 9: 31.675
+    opp 10: 29.560
+    opp 11: 30.865
+    opp 12: 5.910
+    opp 13: 12.265
+    opp 14: 8.590
+    opp 15: -48.695
+    opp 16: -58.115
+    opp 17: -61.680
+    opp 18: 2.010
+    opp 19: -10.405
+    opp 20: 4.380
+    opp 21: -9.065
+    opp 22: -13.990
+    opp 23: -3.740
+    opp 24: -47.550
+    opp 25: -46.805
+    opp 26: -55.085

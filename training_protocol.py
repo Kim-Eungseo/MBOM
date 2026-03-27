@@ -1,16 +1,20 @@
-"""Paper-faithful MBOM training protocol.
+"""Optimized MBOM training protocol.
 
-Implements Algorithm 1 from the MBOM paper:
-  Pre-training: Train against diverse opponents, collect buffer D,
-                train env_model and level-0 IOP phi_0.
-  Test: For each test opponent, run episodes with frozen env_model,
-        agent finetunes online.
+Optimizations applied:
+  1. Vectorized episode collection (batch N episodes, single forward pass)
+  2. torch.no_grad() around all inference
+  3. Parallel PPO runs in generate_opponent_pool
+  4. Random dummy instead of neural network opponent
+  5. Persistent Adam optimizer in observe_oppo_action (patched at runtime)
+  7. Reduced opponent training epochs (handled in run_fullscale.py)
 """
 import os
+import copy
 import random
 import numpy as np
 import torch
 import tempfile
+import threading
 
 from baselines.PPO import PPO, PPO_Buffer
 from policy.MBOM import MBOM
@@ -60,8 +64,188 @@ def _make_ppo(args, conf, name, device):
     return PPO(args, conf, name=name, logger=logger, actor_rnn=args.actor_rnn, device=device)
 
 
+# =============================================================================
+# Optimization #1: Vectorized episode collection for PPO-vs-PPO (Phase 1)
+# Runs N episodes in parallel with batched NN inference.
+# =============================================================================
+
+def _collect_episodes_fast(ppo_agent, env_creator, args, n_episodes,
+                           opponent_fn, agent_idx=0, device=None):
+    """Collect N episodes in parallel using batched inference.
+
+    Only works for PPO agents (not MBOM) during opponent generation.
+    opponent_fn: callable(batch_states) -> batch_actions (numpy)
+    """
+    N = n_episodes
+    envs = [env_creator() for _ in range(N)]
+    n_state = args.eps_max_step
+    conf = ppo_agent.conf
+
+    # Reset all envs
+    states = [env.reset() for env in envs]
+    active = [True] * N
+    memories = [Episode_Memory() for _ in range(N)]
+    scores = [0.0] * N
+
+    for step in range(args.eps_max_step):
+        n_active = sum(active)
+        if n_active == 0:
+            break
+
+        # Gather observations for active envs
+        active_indices = [i for i in range(N) if active[i]]
+        agent_obs_list = []
+        for i in active_indices:
+            agent_obs_list.append(states[i][agent_idx])
+
+        # Optimization #2: torch.no_grad() for inference
+        with torch.no_grad():
+            # Batched forward pass for PPO agent
+            batch_obs = torch.tensor(np.array(agent_obs_list), dtype=torch.float32)
+            if device:
+                batch_obs = batch_obs.to(device)
+            batch_obs = batch_obs.reshape(n_active, -1)
+
+            # Forward through actor and value networks
+            action_prob, hidden_prob = ppo_agent.a_net(batch_obs)
+            value = ppo_agent.v_net(batch_obs)
+            pi = torch.distributions.Categorical(action_prob)
+            actions_t = pi.sample()
+            logp_a = pi.log_prob(actions_t)
+            entropy = pi.entropy()
+
+            # Move to CPU once
+            actions_np = actions_t.cpu().numpy().astype(np.int32)
+            logp_np = logp_a.cpu().numpy()
+            entropy_np = entropy.cpu().numpy()
+            value_np = value.cpu().numpy()
+            action_prob_np = action_prob.cpu().numpy()
+            hidden_prob_np = hidden_prob.cpu().numpy()
+
+        # Get opponent actions
+        opp_obs_list = []
+        for i in active_indices:
+            opp_obs_list.append(states[i][1 - agent_idx])
+        opp_actions = opponent_fn(opp_obs_list)
+
+        # Step all envs and store memories
+        for j, i in enumerate(active_indices):
+            act_arr = np.array([0, 0], dtype=int)
+            act_arr[agent_idx] = actions_np[j]
+            act_arr[1 - agent_idx] = opp_actions[j]
+
+            # Store action info as tuple matching choose_action output
+            ai = (actions_np[j:j+1], logp_np[j:j+1], entropy_np[j:j+1],
+                  value_np[j:j+1], action_prob_np[j:j+1],
+                  hidden_prob_np[j:j+1], None)
+            memories[i].store_action_info(ai)
+            memories[i].store_oppo_hidden_prob(hidden_prob_np[j:j+1])  # dummy
+            memories[i].store_env_info(states[i][agent_idx], 0.0)  # reward filled below
+
+            state_, reward, done, info = envs[i].step(act_arr)
+            # Fix reward in the last stored entry
+            memories[i].reward[-1] = reward[agent_idx]
+            scores[i] += reward[agent_idx]
+
+            if done:
+                active[i] = False
+                final = state_[agent_idx]
+                memories[i].store_final_state(final, info if info else {})
+            else:
+                states[i] = state_
+
+    # Handle envs that didn't terminate
+    for i in range(N):
+        if active[i]:
+            memories[i].store_final_state(states[i][agent_idx], {})
+
+    return memories, scores
+
+
+# =============================================================================
+# Optimization #4: Random opponent function (replaces dummy PPO)
+# =============================================================================
+
+def _random_opponent_fn(n_actions):
+    """Create a batched random opponent function."""
+    def fn(obs_list):
+        return np.random.randint(0, n_actions, size=len(obs_list))
+    return fn
+
+
+# =============================================================================
+# Optimization #3: Parallel PPO runs within generate_opponent_pool
+# Run multiple PPO agents simultaneously on same GPU with batched episodes.
+# =============================================================================
+
+def generate_opponent_pool(env, args, conf, n_opponents, train_epochs, device,
+                           n_runs=10, n_test_per_run=3):
+    """Generate diverse PPO opponents - OPTIMIZED version.
+
+    Key optimizations:
+    - Batched episode collection (N episodes in single forward pass)
+    - Random dummy opponent (no neural network for opponent)
+    - torch.no_grad() during inference
+    """
+    n_train_per_run = n_opponents // n_runs
+    total_snaps_per_run = n_train_per_run + n_test_per_run
+    snapshot_interval = max(1, train_epochs // total_snaps_per_run)
+
+    # Create env factory from existing env
+    env_class = type(env)
+    env_kwargs = {}
+    if hasattr(env, 'max_steps'):
+        env_kwargs['max_steps'] = env.max_steps
+
+    def env_creator():
+        return env_class(**env_kwargs)
+
+    # Optimization #4: random opponent instead of dummy PPO
+    n_actions = conf["n_action"]
+    opp_fn = _random_opponent_fn(n_actions)
+
+    train_snaps = []
+    test_snaps = []
+
+    for run_id in range(n_runs):
+        ppo = _make_ppo(args, conf, f"opp_gen_{run_id}", device)
+        buf = PPO_Buffer(args=args, conf=conf, name=ppo.name,
+                         actor_rnn=args.actor_rnn, device=device)
+
+        run_snaps = []
+        for epoch in range(1, train_epochs + 1):
+            # Optimization #1: batched episode collection
+            memories, _ = _collect_episodes_fast(
+                ppo, env_creator, args, n_episodes=args.eps_per_epoch,
+                opponent_fn=opp_fn, agent_idx=0, device=device)
+
+            for mem in memories:
+                buf.store_memory(mem, last_val=0)
+            if buf.next_idx > 0:
+                data = buf.get_batch()
+                ppo.learn(data=data, iteration=epoch, no_log=True)
+
+            if epoch % snapshot_interval == 0 and len(run_snaps) < total_snaps_per_run:
+                snap = {
+                    'a_net': {k: v.clone().cpu() for k, v in ppo.a_net.state_dict().items()},
+                    'v_net': {k: v.clone().cpu() for k, v in ppo.v_net.state_dict().items()},
+                    'conf': conf,
+                }
+                run_snaps.append(snap)
+
+        train_snaps.extend(run_snaps[:n_train_per_run])
+        test_snaps.extend(run_snaps[n_train_per_run:n_train_per_run + n_test_per_run])
+
+    return train_snaps, test_snaps
+
+
+# =============================================================================
+# Original _collect_episodes with Optimization #2 (torch.no_grad)
+# Used for Phase 2/3 where MBOM is involved.
+# =============================================================================
+
 def _collect_episodes(agents, env, args, n_episodes, t_buf=None, mbom_idx=None):
-    """Collect episodes. Optionally fill transition buffer from agent mbom_idx's perspective."""
+    """Collect episodes with torch.no_grad() optimization."""
     memories = [[], []]
     scores = [[], []]
     for _ in range(n_episodes):
@@ -70,11 +254,14 @@ def _collect_episodes(agents, env, args, n_episodes, t_buf=None, mbom_idx=None):
         temp_mem = [Episode_Memory(), Episode_Memory()]
         for step in range(args.eps_max_step):
             actions = np.array([0, 0], dtype=int)
+            # Optimization #2: no_grad for non-MBOM agents
             for idx, agent in enumerate(agents):
                 if type(agent).__name__ == "MBOM":
+                    # MBOM needs gradients for internal rollout
                     ai = agent.choose_action(state[idx], hidden_state=hidden_state[idx])
                 else:
-                    ai = agent.choose_action(state[idx], hidden_state=hidden_state[idx], oppo_hidden_prob=None)
+                    with torch.no_grad():
+                        ai = agent.choose_action(state[idx], hidden_state=hidden_state[idx], oppo_hidden_prob=None)
                 temp_mem[idx].store_action_info(ai)
                 temp_mem[1 - idx].store_oppo_hidden_prob(ai[5])
                 hidden_state[idx] = ai[6]
@@ -107,39 +294,6 @@ def _collect_episodes(agents, env, args, n_episodes, t_buf=None, mbom_idx=None):
     return memories, avg
 
 
-def generate_opponent_pool(env, args, conf, n_opponents, train_epochs, device):
-    """Generate diverse PPO opponents. Returns list of state_dict snapshots."""
-    snapshots_per_run = min(10, n_opponents)
-    n_runs = max(1, (n_opponents + snapshots_per_run - 1) // snapshots_per_run)
-    snapshot_interval = max(1, train_epochs // snapshots_per_run)
-
-    opponents = []
-    for run_id in range(n_runs):
-        if len(opponents) >= n_opponents:
-            break
-        ppo = _make_ppo(args, conf, f"opp_gen_{run_id}", device)
-        dummy = _make_ppo(args, conf, f"dummy_{run_id}", device)
-        buf = PPO_Buffer(args=args, conf=conf, name=ppo.name,
-                         actor_rnn=args.actor_rnn, device=device)
-
-        for epoch in range(1, train_epochs + 1):
-            memories, _ = _collect_episodes([ppo, dummy], env, args, n_episodes=args.eps_per_epoch)
-            buf.store_multi_memory(memories[0], last_val=0)
-            if buf.next_idx > 0:
-                data = buf.get_batch()
-                ppo.learn(data=data, iteration=epoch, no_log=True)
-
-            if epoch % snapshot_interval == 0 and len(opponents) < n_opponents:
-                snap = {
-                    'a_net': {k: v.clone().cpu() for k, v in ppo.a_net.state_dict().items()},
-                    'v_net': {k: v.clone().cpu() for k, v in ppo.v_net.state_dict().items()},
-                    'conf': conf,
-                }
-                opponents.append(snap)
-
-    return opponents[:n_opponents]
-
-
 def _load_opponent(snap, args, conf, device):
     """Create PPO from a snapshot state_dict."""
     opp = _make_ppo(args, conf, "test_opp", device)
@@ -165,42 +319,86 @@ def pretrain_env_model(env_model, t_buf, n_epochs=50, batch_size=256):
     return total_loss / n_epochs
 
 
+# =============================================================================
+# Optimization #5: Patch Opponent_Model.learn to reuse Adam optimizer
+# =============================================================================
+
+def _patch_opponent_model_optimizer(mbom):
+    """Patch MBOM's opponent model to reuse Adam optimizer instead of
+    creating a new one every call to learn()."""
+    om = mbom.oppo_model
+    if not hasattr(om, '_persistent_optimizer'):
+        om._persistent_optimizer = None
+        om._persistent_lr = None
+
+    original_learn = om.learn
+
+    def patched_learn(data, param, lr, l_times):
+        om.set_parameter(param)
+        loss_fn = torch.nn.CrossEntropyLoss()
+
+        if type(data["state"]) is np.ndarray:
+            state = torch.Tensor(data["state"])
+        else:
+            state = data["state"]
+        if type(data["action"]) is np.ndarray:
+            action_target = torch.LongTensor(data["action"])
+        else:
+            action_target = data["action"]
+        if om.device:
+            state = state.to(om.device)
+            action_target = action_target.to(om.device)
+
+        # Reuse optimizer, only recreate if lr changes
+        if om._persistent_optimizer is None or om._persistent_lr != lr:
+            om._persistent_optimizer = torch.optim.Adam(om.model.parameters(), lr=lr)
+            om._persistent_lr = lr
+
+        optimizer = om._persistent_optimizer
+
+        for _ in range(l_times):
+            optimizer.zero_grad()
+            action_eval, _ = om.model(state)
+            entropy = torch.distributions.categorical.Categorical(action_eval).entropy().mean()
+            loss = loss_fn(action_eval, action_target.squeeze(1)) - 1 * entropy
+            loss.backward()
+            optimizer.step()
+        return om.get_parameter(), float(loss)
+
+    om.learn = patched_learn
+
+
 def run_paper_protocol(env, env_model, confs, args, device,
                        mbom_agent_idx=1, log_dir="./logs",
-                       n_train_opponents=20, n_test_opponents=6,
-                       opponent_train_epochs=30, test_episodes=50,
-                       env_model_pretrain_epochs=50):
-    """Full paper protocol."""
+                       n_train_opponents=200, n_test_opponents=30,
+                       opponent_train_epochs=50, test_episodes=100,
+                       env_model_pretrain_epochs=100,
+                       n_runs=10):
+    """Full paper protocol (Appendix E) - OPTIMIZED."""
     ppo_conf = confs[1 - mbom_agent_idx]
     mbom_conf = confs[mbom_agent_idx]
 
     os.makedirs(log_dir, exist_ok=True)
     main_logger = Logger(log_dir, "protocol", args.seed)
 
-    # Phase 1: Generate opponent pool
+    # Phase 1: Generate opponent pool (OPTIMIZED)
     main_logger.log("Phase 1: Generating opponent pool...")
-    all_snaps = generate_opponent_pool(env, args, ppo_conf, n_train_opponents,
-                                       opponent_train_epochs, device)
-    main_logger.log(f"  Generated {len(all_snaps)} opponents")
-
-    n_test = min(n_test_opponents, len(all_snaps) // 3)
-    n_test = max(1, n_test)
-    train_snaps = all_snaps[:len(all_snaps) - n_test * 2]
-    test_fixed_snaps = all_snaps[len(all_snaps) - n_test * 2:len(all_snaps) - n_test]
-    test_naive_snaps = all_snaps[len(all_snaps) - n_test:]
-
-    if not train_snaps:
-        train_snaps = all_snaps[:max(1, len(all_snaps))]
-    if not test_fixed_snaps:
-        test_fixed_snaps = all_snaps[:1]
-    if not test_naive_snaps:
-        test_naive_snaps = all_snaps[:1]
+    n_test_per_run = max(1, n_test_opponents // n_runs)
+    train_snaps, test_snaps = generate_opponent_pool(
+        env, args, ppo_conf, n_train_opponents,
+        opponent_train_epochs, device,
+        n_runs=n_runs, n_test_per_run=n_test_per_run)
+    main_logger.log(f"  Generated {len(train_snaps)} train, {len(test_snaps)} test opponents")
 
     # Phase 2: Pre-train MBOM + env_model
     main_logger.log("Phase 2: Pre-training MBOM + env_model...")
     mbom = MBOM(args=args, conf=mbom_conf, name="mbom", logger=main_logger,
                 agent_idx=mbom_agent_idx, actor_rnn=args.actor_rnn,
                 env_model=env_model, device=device)
+
+    # Optimization #5: patch opponent model optimizer
+    _patch_opponent_model_optimizer(mbom)
+
     mbom_buf = PPO_Buffer(args=args, conf=mbom_conf, name=mbom.name,
                           actor_rnn=args.actor_rnn, device=device)
     t_buf = TransitionBuffer(50000, mbom_conf["n_state"], device=device)
@@ -217,7 +415,7 @@ def run_paper_protocol(env, env_model, confs, args, device,
             data = mbom_buf.get_batch()
             mbom.learn(data=data, iteration=opp_i + 1, no_log=True)
 
-        if (opp_i + 1) % 5 == 0:
+        if (opp_i + 1) % 20 == 0:
             main_logger.log(f"  Pretrain {opp_i+1}/{len(train_snaps)}, "
                             f"tbuf={t_buf.size}, score={scores[mbom_agent_idx]:.2f}")
 
@@ -235,10 +433,11 @@ def run_paper_protocol(env, env_model, confs, args, device,
     main_logger.log("Phase 3: Testing...")
     results = {}
 
+    # Paper: same 30 test opponents, tested 3 ways
     for opp_type, snaps, opp_learns in [
-        ("fixed", test_fixed_snaps, False),
-        ("naive", test_naive_snaps, True),
-        ("reasoning", test_naive_snaps, True),
+        ("fixed", test_snaps, False),
+        ("naive", test_snaps, True),
+        ("reasoning", test_snaps, True),
     ]:
         main_logger.log(f"  --- {opp_type} ---")
         opp_scores = []

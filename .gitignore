@@ -7,9 +7,12 @@ dist/
 build/
 *.so
 
-# Environments
+# Virtual environments
 .env
 *.env
+.venv/
+venv/
+env/
 
 # IDE
 .vscode/
@@ -22,10 +25,18 @@ build/
 .DS_Store
 Thumbs.db
 
-# Logs & checkpoints
+# Logs, checkpoints & experiment outputs
 logs/
+logs_paper/
 *.ckp
+*.pt
+*.pth
 wandb/
+runs/
+events.out.tfevents.*
+
+# Temporary files from training
+/tmp/
 
 # CMake (gfootball build artifacts)
 CMakeFiles/
@@ -33,6 +44,6 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 
-# Test artifacts
-test_upgrade.py
-test_envs.py
+# Conda / uv
+*.conda
+*.tar.bz2

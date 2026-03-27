@@ -2,17 +2,29 @@ Phase 1: Generating opponent pool...
   Generated 20 opponents
 Phase 2: Pre-training MBOM + env_model...
   Pretrain 5/8, tbuf=2500, score=-10.50
-  Env model loss: 0.062469
+  Env model loss: 0.064319
 Phase 3: Testing...
   --- fixed ---
-    opp 0: -4.680
-    opp 1: 0.780
-    opp 2: 0.020
-    opp 3: -0.340
-    opp 4: 0.170
-    opp 5: 2.070
-  fixed mean: -0.330
+    opp 0: -4.200
+    opp 1: 0.490
+    opp 2: 0.530
+    opp 3: 0.020
+    opp 4: 0.300
+    opp 5: 2.480
+  fixed mean: -0.063
   --- naive ---
-    opp 0: 0.540
-    opp 1: 0.180
-    opp 2: 3.290
+    opp 0: 0.710
+    opp 1: 1.330
+    opp 2: 4.680
+    opp 3: -0.050
+    opp 4: -3.010
+    opp 5: 2.520
+  naive mean: 1.030
+  --- reasoning ---
+    opp 0: -0.860
+    opp 1: 4.900
+    opp 2: -2.140
+    opp 3: -2.590
+    opp 4: -0.950
+    opp 5: 0.450
+  reasoning mean: -0.198
