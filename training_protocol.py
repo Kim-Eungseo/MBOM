@@ -319,53 +319,7 @@ def pretrain_env_model(env_model, t_buf, n_epochs=50, batch_size=256):
     return total_loss / n_epochs
 
 
-# =============================================================================
-# Optimization #5: Patch Opponent_Model.learn to reuse Adam optimizer
-# =============================================================================
-
-def _patch_opponent_model_optimizer(mbom):
-    """Patch MBOM's opponent model to reuse Adam optimizer instead of
-    creating a new one every call to learn()."""
-    om = mbom.oppo_model
-    if not hasattr(om, '_persistent_optimizer'):
-        om._persistent_optimizer = None
-        om._persistent_lr = None
-
-    original_learn = om.learn
-
-    def patched_learn(data, param, lr, l_times):
-        om.set_parameter(param)
-        loss_fn = torch.nn.CrossEntropyLoss()
-
-        if type(data["state"]) is np.ndarray:
-            state = torch.Tensor(data["state"])
-        else:
-            state = data["state"]
-        if type(data["action"]) is np.ndarray:
-            action_target = torch.LongTensor(data["action"])
-        else:
-            action_target = data["action"]
-        if om.device:
-            state = state.to(om.device)
-            action_target = action_target.to(om.device)
-
-        # Reuse optimizer, only recreate if lr changes
-        if om._persistent_optimizer is None or om._persistent_lr != lr:
-            om._persistent_optimizer = torch.optim.Adam(om.model.parameters(), lr=lr)
-            om._persistent_lr = lr
-
-        optimizer = om._persistent_optimizer
-
-        for _ in range(l_times):
-            optimizer.zero_grad()
-            action_eval, _ = om.model(state)
-            entropy = torch.distributions.categorical.Categorical(action_eval).entropy().mean()
-            loss = loss_fn(action_eval, action_target.squeeze(1)) - 1 * entropy
-            loss.backward()
-            optimizer.step()
-        return om.get_parameter(), float(loss)
-
-    om.learn = patched_learn
+    # (Optimizer reuse now built into Opponent_Model.learn directly)
 
 
 def run_paper_protocol(env, env_model, confs, args, device,
@@ -397,8 +351,6 @@ def run_paper_protocol(env, env_model, confs, args, device,
                 env_model=env_model, device=device)
 
     # Optimization #5: patch opponent model optimizer
-    _patch_opponent_model_optimizer(mbom)
-
     mbom_buf = PPO_Buffer(args=args, conf=mbom_conf, name=mbom.name,
                           actor_rnn=args.actor_rnn, device=device)
     t_buf = TransitionBuffer(50000, mbom_conf["n_state"], device=device)

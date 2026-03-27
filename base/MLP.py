@@ -41,7 +41,7 @@ class MLP(nn.Module):
         elif self.output_type == "prob":
             hidden_prob = x.detach()
             x = nn.functional.softmax(self.out(x), dim=-1)
-            return x, x.detach()
+            return x, hidden_prob
         else:
             x = self.out(x)
             return x

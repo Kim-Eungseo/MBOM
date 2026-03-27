@@ -58,14 +58,15 @@ ENV_CONFIGS = {
     },
 }
 
-# Paper-scale hyperparameters (Appendix E)
-# Optimization #7: reduced opponent training epochs (100→50) - still enough for diverse snapshots
+# Paper-faithful hyperparameters (Appendix E + Figure 2/9)
+# Paper: "ten test joint opponent policies" per type (Fig 9 caption)
+# Training set 200, test set 10 (per type), 5 seeds
 N_SEEDS = 5
 N_TRAIN_OPPONENTS = 200
-N_TEST_OPPONENTS = 30
-N_RUNS = 10                     # 10 independent PPO runs
-OPPONENT_TRAIN_EPOCHS = 50      # epochs per PPO run (23 snapshots over 50 epochs)
-TEST_EPISODES = 100
+N_TEST_OPPONENTS = 10            # paper Fig 2/9: 10 test opponents per type
+N_RUNS = 10                      # 10 independent PPO runs
+OPPONENT_TRAIN_EPOCHS = 50       # epochs per PPO run
+TEST_EPISODES = 50               # episodes per test opponent
 ENV_MODEL_PRETRAIN_EPOCHS = 100
 MAX_EPOCH = 100
 EPS_PER_EPOCH = 10

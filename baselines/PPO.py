@@ -138,9 +138,11 @@ class PPO(Base_ActorCritic):
         def compute_loss_v(state, reward_to_go):
             return ((self.v_net(state) - reward_to_go) ** 2).mean()
 
-        loss_a_old, a_info_old = compute_loss_a(a_state, action, advantage, logp_a)
-        loss_a_old = loss_a_old.detach().item()
-        loss_v_old = compute_loss_v(v_state, reward_to_go).detach().item()
+        # Only compute old losses when logging is needed (avoid 2 wasted forward passes)
+        if not no_log:
+            loss_a_old, a_info_old = compute_loss_a(a_state, action, advantage, logp_a)
+            loss_a_old = loss_a_old.detach().item()
+            loss_v_old = compute_loss_v(v_state, reward_to_go).detach().item()
 
         for _ in range(self.conf["a_update_times"]):
             self.a_optimizer.zero_grad()
@@ -157,7 +159,6 @@ class PPO(Base_ActorCritic):
                                         Loss_a=loss_a_old, Loss_v=loss_v_old,
                                         KL=a_info_old['kl'], Entropy=a_info_old['ent'],
                                         )
-        pass
 
     def save_model(self, iteration):
         import os

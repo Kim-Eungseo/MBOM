@@ -54,7 +54,11 @@ class Opponent_Model(object):
             action_target = action_target.to(self.device)
         self.set_parameter(param)
         loss_fn = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+        # Reuse Adam optimizer instead of creating a new one every call
+        if not hasattr(self, '_optimizer') or self._optimizer is None or self._optimizer_lr != lr:
+            self._optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+            self._optimizer_lr = lr
+        optimizer = self._optimizer
         for _ in range(l_times):
             optimizer.zero_grad()
             action_eval, _ = self.model(state)
